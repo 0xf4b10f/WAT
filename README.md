@@ -1,28 +1,45 @@
-WAT — Windows ADS Triage
+#WAT — Windows ADS Triage
 WAT is a forensic command-line tool for enumerating and triaging NTFS Alternate Data Streams (ADS) on Windows systems. It surfaces hidden stream data, optionally computes Shannon entropy, flags recently modified files, and exports results to CSV for downstream analysis.
 WAT is part of the XTT toolchain family. For Linux/macOS extended-attribute triage, see XTT.
 
+Windows only. ADS is an NTFS feature; WAT will exit with an error on Linux or macOS.
+ADS write time is not available. The Win32 FindFirstStream / FindNextStream API does not expose per-stream timestamps. The mtime shown is for ::$DATA (the host file's primary data stream). Raw MFT parsing (outside WAT's scope) is required for stream-level timestamps.
+Directory scans are always recursive. Use -f for single-file examination.
+Streams are read in full. Very large streams will be read entirely into memory.
 
-Requirements
+
+#Requirements
 Windows (NTFS volume)
 Python 3.10+
 No third-party dependencies — stdlib only
 
 
-Installation
+#Installation
 git clone https://github.com/0xf4b10/WAT.git
 cd WAT
 python wat.py --help
 No pip install step required.
 
 
-Usage
+#Usage
 usage: wat [-h] [--version] (-d DIRECTORY | -f FILE) [-e] [-t] [--skew-days N] [-w FILE] [-v]
-Options
-FlagDescription-d, --directory DIRECTORYRecursive scan of a directory-f, --file FILEScan a single file-e, --entropyCalculate Shannon entropy per ADS-t, --time-skewFlag files whose mtime is within --skew-days of scan time--skew-days NMtime-skew window in days (default: 3). Requires -t-w, --write FILEExport results to CSV-v, --verboseEnable DEBUG logging--versionShow version and exit-h, --helpShow help and exit
+
+
+#Options
+-d, --directory DIRECTORY Recursive scan of a directory
+-f, --file FILEScan a single file
+-e, --entropy Calculate Shannon entropy per ADS
+-t, --time-skew Flag files whose mtime is within 
+--skew-days of scan time--skew-days NMtime-skew window in days (default: 3). Requires -t
+-w, --write FILE Export results to CSV
+-v, --verbose Enable DEBUG logging
+--version Show version and exit
+-h, --help Show help and exit
+
 -d and -f are mutually exclusive. One is required.
 
-Examples
+
+#Examples
 Scan a single file and compute entropy:
 python wat.py -f C:\Users\victim\Downloads\invoice.exe -e
 Recursively scan a directory, flag recently modified files:
@@ -30,8 +47,8 @@ python wat.py -d C:\Users\victim -t --skew-days 7
 Full triage — entropy, time-skew, and CSV export:
 python wat.py -d C:\Users\victim -e -t -w results.csv
 
-Output
-Console
+
+#Output
 WAT prints a summary table to stdout. Columns are shown or hidden based on active flags — Entropy only appears when -e is passed; MTime (UTC) only when -t is passed.
 WAT v1.0.0 — Windows ADS Triage
 
@@ -67,32 +84,12 @@ Persist scripts that are executed via wscript or powershell with the stream path
 
 High entropy in a non-Zone.Identifier stream on a recently modified file is a strong indicator of suspicious activity.
 
-Limitations
-
-Windows only. ADS is an NTFS feature; WAT will exit with an error on Linux or macOS.
-ADS write time is not available. The Win32 FindFirstStream / FindNextStream API does not expose per-stream timestamps. The mtime shown is for ::$DATA (the host file's primary data stream). Raw MFT parsing (outside WAT's scope) is required for stream-level timestamps.
-Directory scans are always recursive. Use -f for single-file examination.
-Streams are read in full. Very large streams will be read entirely into memory.
 
 
-Related Tools
+#Related Tools
 ToolPlatformFocusXTTmacOS / LinuxExtended attribute triage (com.apple.quarantine, xattrs)WATWindowsNTFS Alternate Data Stream triage
 
-Changelog
-v1.0.0
-
-Initial release
--d / -f mutually exclusive target group
-Opt-in -e / --entropy (Shannon entropy per stream)
-Opt-in -t / --time-skew with configurable --skew-days window
--w / --write CSV export
-Dynamic console table (columns shown only when relevant flag is active)
-Zone.Identifier decoded as UTF-8 (correct encoding — not UTF-16)
-WIN32_FIND_STREAM_DATA.cStreamName buffer sized to 296 (correct — not 260)
-64-bit safe INVALID_HANDLE_VALUE comparison via ctypes.c_void_p
-Explicit argtypes / restype on all Kernel32 bindings
-Structured StreamRecord dataclass; read errors captured per-record, never silently dropped
 
 
-License
+#License
 MIT — see LICENSE.
