@@ -2,9 +2,11 @@
 wat.py — WAT: Windows ADS Triage
 Enumerate, inspect, and triage NTFS Alternate Data Streams.
 
+Part of the XTT toolchain family (Windows-only module).
+See also: XTT (Linux/macOS extended-attribute triage)
 """
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 __tool__ = "WAT"
 
 import ctypes
@@ -130,14 +132,13 @@ def _read_stream(
 
     entropy = calculate_entropy(data) if calc_entropy else 0.0
 
-    # Zone.Identifier is always UTF-8/ASCII — not UTF-16
-    if ":Zone.Identifier" in stream_name:
-        try:
-            text = data.decode("utf-8", errors="replace").strip()
-            preview = text.replace("\r\n", " | ").replace("\n", " | ")
-        except Exception as exc:
-            preview = f"<decode error: {exc}>"
-    else:
+    # Try UTF-8 for all streams; fall back to hex only for true binary content.
+    # Zone.Identifier and other text-based streams surface readable content.
+    # Encrypted, packed, or arbitrary binary streams get a hex preview.
+    try:
+        text = data[:256].decode("utf-8").strip()
+        preview = text.replace("\r\n", " | ").replace("\n", " | ")
+    except (UnicodeDecodeError, ValueError):
         hex_bytes = data[:64].hex()
         suffix = "..." if len(data) > 64 else ""
         preview = f"HEX:{hex_bytes}{suffix}"
