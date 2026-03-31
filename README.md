@@ -179,6 +179,9 @@ High entropy in a non-`Zone.Identifier` stream on a recently modified file is a 
 
 ## Changelog
 
+### v1.0.1
+- Improved stream content preview: WAT now attempts UTF-8 decoding for all streams, falling back to hex only when the content is not valid UTF-8. Plain-text streams (scripts, config files, readable payloads) now surface as text rather than hex regardless of stream name.
+
 ### v1.0.0
 - Initial release
 - `-d / -f` mutually exclusive target group
